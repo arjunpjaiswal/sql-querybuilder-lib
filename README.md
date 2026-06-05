@@ -1,6 +1,6 @@
 # SQL QueryBuilder
 
-A fluent SQL query builder implementing the **Builder Design Pattern**, full **JDBC** integration, **CRUD** operations, **Joins**, **Aggregations**, and **SOLID principles** throughout.
+A fluent SQL query builder implementing the **Builder Design Pattern**, full **JDBC** integration, **CRUD** operations, **Joins**, **Aggregations**, **Transactions**, and **SOLID principles** throughout.
 
 ## Project Structure
 
@@ -19,7 +19,8 @@ sql-querybuilder/
 │   │   └── DeleteQueryBuilder.java  ← Concrete DELETE builder
 │   ├── jdbc/                        ← JDBC layer
 │   │   ├── DatabaseConnection.java  ← Singleton connection manager
-│   │   └── QueryExecutor.java       ← SQL execution engine (PreparedStatement)
+│   │   ├── QueryExecutor.java       ← SQL execution engine (PreparedStatement)
+│   │   └── TransactionManager.java  ← ACID transaction handling
 │   ├── model/                       ← Plain Java Objects (POJOs)
 │   │   ├── User.java
 │   │   ├── Product.java
@@ -28,7 +29,7 @@ sql-querybuilder/
 │   │   ├── UserDAO.java
 │   │   ├── ProductDAO.java
 │   │   └── OrderDAO.java
-│   └── Main.java                    ← Full demo entry point
+│   └── Main.java                    ← Full demo entry point (18 sections)
 └── src/test/java/com/querybuilder/
     ├── SelectQueryBuilderTest.java  ← 25 tests for SELECT builder
     └── MutationBuilderTest.java     ← 7 tests for INSERT/UPDATE/DELETE builders
@@ -56,35 +57,39 @@ mvn test
 java -jar target/sql-querybuilder-1.0.0-jar-with-dependencies.jar
 ```
 
-If your MySQL password is not set in `DatabaseConnection.java`, override it:
+If your MySQL password differs from the default in `DatabaseConnection.java`, override it:
 ```bash
 java -Ddb.password=yourpassword -jar target/sql-querybuilder-1.0.0-jar-with-dependencies.jar
 ```
 
+> **Note:** The demo clears all three tables and resets AUTO_INCREMENT at startup so it
+> can be run multiple times without duplicate-key errors. Every run starts completely fresh.
+
 ## What the demo covers
 
-| # | Section | Concepts |
-|---|---------|----------|
-| 1 | INSERT users | InsertQueryBuilder, executeInsertGetKey, auto-generated PKs |
-| 2 | INSERT products | Same pattern on a different table |
-| 3 | SELECT all users | SelectQueryBuilder, ORDER BY |
+| #  | Section | Concepts |
+|----|---------|----------|
+| 1  | INSERT users | InsertQueryBuilder, executeInsertGetKey, auto-generated PKs |
+| 2  | INSERT products | Same pattern on a different table |
+| 3  | SELECT all users | SelectQueryBuilder, ORDER BY |
 | 4a | SELECT by id | WHERE with single condition |
 | 4b | SELECT by city | WHERE with string parameter |
 | 4c | SELECT by age range | WHERE + AND chaining |
 | 4d | Search by name | LIKE with % wildcards |
-| 5 | UPDATE user | UpdateQueryBuilder, value binding order |
-| 6 | INNER JOIN orders | Multi-table query, table aliases |
-| 7 | LEFT JOIN order count | All users including those with 0 orders |
-| 8 | Triple JOIN | Three tables joined, category + date filter |
-| 9 | GROUP BY + HAVING | Top spenders report, aggregation |
-| 10 | Pagination | LIMIT + OFFSET |
-| 11 | SELECT DISTINCT | Unique city values |
-| 12 | Revenue by category | COUNT, SUM, AVG, MAX aggregations |
-| 13 | Subquery | Builder composition, nested SELECT |
-| 14 | Builder reset and reuse | reset() clears all state |
-| 15 | Safety — UPDATE | IllegalStateException without WHERE |
-| 16 | Safety — DELETE | IllegalStateException without WHERE |
-| 17 | DELETE + count | DeleteQueryBuilder, UserDAO.count() |
+| 5  | UPDATE user | UpdateQueryBuilder, value binding order |
+| 6  | Place orders via Transaction | ACID — stock check, INSERT order, UPDATE stock, COMMIT/ROLLBACK |
+| 7  | INNER JOIN orders | Multi-table query with table aliases |
+| 8  | LEFT JOIN order count | All users including those with 0 orders |
+| 9  | Triple JOIN | Three tables joined, category + date filter |
+| 10 | GROUP BY + HAVING | Top spenders report, aggregation |
+| 11 | Pagination | LIMIT + OFFSET |
+| 12 | SELECT DISTINCT | Unique city values |
+| 13 | Revenue by category | COUNT, SUM, AVG, MAX aggregations |
+| 14 | Subquery | Builder composition, nested SELECT |
+| 15 | Builder reset and reuse | reset() clears all state |
+| 16 | Safety — UPDATE | IllegalStateException without WHERE |
+| 17 | Safety — DELETE | IllegalStateException without WHERE |
+| 18 | DELETE + count | DeleteQueryBuilder, UserDAO.count() |
 
 ## Builder Usage Examples
 
@@ -145,6 +150,15 @@ DeleteQueryBuilder qb = new DeleteQueryBuilder()
 int rows = executor.executeUpdate(qb.build(), qb.getValues());
 ```
 
+### Transaction
+```java
+TransactionManager txn = new TransactionManager();
+
+// Atomically: checks stock → inserts order → reduces stock
+// On ANY failure: auto-rollback, returns false
+boolean success = txn.placeOrder(userId, productId, qty, unitPrice);
+```
+
 ### Builder reset and reuse
 ```java
 SelectQueryBuilder b = new SelectQueryBuilder();
@@ -196,7 +210,7 @@ and DELETE without WHERE, and IMutationBuilder interface assignability.
 
 | Principle | Where |
 |-----------|-------|
-| **S** Single Responsibility | Each class has one job — build SQL, execute SQL, manage connection, or handle one entity's CRUD |
+| **S** Single Responsibility | Each class has one job — build SQL, execute SQL, manage connection, handle transactions, or handle one entity's CRUD |
 | **O** Open/Closed | Add new builders or DAOs without modifying existing ones |
 | **L** Liskov Substitution | `SelectQueryBuilder` works anywhere `IQueryBuilder` is expected |
 | **I** Interface Segregation | `IQueryBuilder` (SELECT only) is separate from `IMutationBuilder` (CUD only) |
