@@ -4,9 +4,7 @@ A fluent SQL query builder implementing the **Builder Design Pattern**, full **J
 
 ## Project Structure
 
-Two Maven modules under a parent aggregator: `core` is the published library,
-`demo` is a runnable e-commerce example that consumes `core` the same way an
-external project would.
+Two Maven modules under a parent aggregator: `core` is the published library, `demo` is a runnable e-commerce example that consumes `core` the same way an external project would.
 
 ```
 sql-querybuilder/
@@ -27,8 +25,8 @@ sql-querybuilder/
 │       │       ├── QueryExecutor.java       ← SQL execution engine (PreparedStatement)
 │       │       └── TransactionManager.java  ← ACID transaction handling
 │       └── test/java/com/querybuilder/
-│           ├── SelectQueryBuilderTest.java  ← 25 tests for SELECT builder
-│           └── MutationBuilderTest.java     ← 7 tests for INSERT/UPDATE/DELETE builders
+│           ├── SelectQueryBuilderTest.java  ← 23 tests for SELECT builder
+│           └── MutationBuilderTest.java     ← 20 tests for INSERT/UPDATE/DELETE builders
 └── sql-querybuilder-demo/               ← Usage example (not published)
     ├── pom.xml                          ← depends on sql-querybuilder-core
     ├── schema.sql                       ← MySQL schema setup — run this first
@@ -99,29 +97,29 @@ java -jar sql-querybuilder-demo/target/sql-querybuilder-demo-1.0.0-jar-with-depe
 ```
 
 If your MySQL password differs from the default in `DatabaseConnection.java`, override it:
+
 ```bash
 java -Ddb.password=yourpassword -jar sql-querybuilder-demo/target/sql-querybuilder-demo-1.0.0-jar-with-dependencies.jar
 ```
 
-> **Note:** The demo clears all three tables and resets AUTO_INCREMENT at startup so it
-> can be run multiple times without duplicate-key errors. Every run starts completely fresh.
+Note: The demo clears all three tables and resets AUTO_INCREMENT at startup so it can be run multiple times without duplicate-key errors. Every run starts completely fresh.
 
 ## What the demo covers
 
-| #  | Section | Concepts |
-|----|---------|----------|
-| 1  | INSERT users | InsertQueryBuilder, executeInsertGetKey, auto-generated PKs |
-| 2  | INSERT products | Same pattern on a different table |
-| 3  | SELECT all users | SelectQueryBuilder, ORDER BY |
+| # | Section | Concepts |
+|---|---------|----------|
+| 1 | INSERT users | InsertQueryBuilder, executeInsertGetKey, auto-generated PKs |
+| 2 | INSERT products | Same pattern on a different table |
+| 3 | SELECT all users | SelectQueryBuilder, ORDER BY |
 | 4a | SELECT by id | WHERE with single condition |
 | 4b | SELECT by city | WHERE with string parameter |
 | 4c | SELECT by age range | WHERE + AND chaining |
 | 4d | Search by name | LIKE with % wildcards |
-| 5  | UPDATE user | UpdateQueryBuilder, value binding order |
-| 6  | Place orders via Transaction | ACID — stock check, INSERT order, UPDATE stock, COMMIT/ROLLBACK |
-| 7  | INNER JOIN orders | Multi-table query with table aliases |
-| 8  | LEFT JOIN order count | All users including those with 0 orders |
-| 9  | Triple JOIN | Three tables joined, category + date filter |
+| 5 | UPDATE user | UpdateQueryBuilder, value binding order |
+| 6 | Place orders via Transaction | ACID — stock check, INSERT order, UPDATE stock, COMMIT/ROLLBACK |
+| 7 | INNER JOIN orders | Multi-table query with table aliases |
+| 8 | LEFT JOIN order count | All users including those with 0 orders |
+| 9 | Triple JOIN | Three tables joined, category + date filter |
 | 10 | GROUP BY + HAVING | Top spenders report, aggregation |
 | 11 | Pagination | LIMIT + OFFSET |
 | 12 | SELECT DISTINCT | Unique city values |
@@ -232,20 +230,20 @@ userDAO.delete(1);
 
 ## Unit Tests
 
-32 tests verify all builder logic without requiring a database connection.
+43 tests verify all builder logic without requiring a database connection.
 
 ```bash
 mvn test
 ```
 
 ```
-Tests run: 32, Failures: 0, Errors: 0
+Tests run: 43, Failures: 0, Errors: 0
 BUILD SUCCESS
 ```
 
-Tests cover: SELECT, WHERE, AND, OR, JOIN, GROUP BY, HAVING, ORDER BY, LIMIT, OFFSET,
-DISTINCT, reset(), INSERT values order, UPDATE values order, safety guards on UPDATE
-and DELETE without WHERE, and IMutationBuilder interface assignability.
+Tests cover: SELECT, WHERE, AND, OR, JOIN, GROUP BY, HAVING, ORDER BY, LIMIT, OFFSET, DISTINCT, reset(), INSERT values order, UPDATE values order, safety guards on UPDATE and DELETE without WHERE, and IMutationBuilder interface assignability.
+
+`MutationBuilderTest` uses JUnit 5 `@Nested` classes to group tests by builder: `InsertTests` (5), `UpdateTests` (6), `DeleteTests` (6), `InterfaceContractTests` (3).
 
 ## SOLID Principles Applied
 
@@ -259,9 +257,7 @@ and DELETE without WHERE, and IMutationBuilder interface assignability.
 
 ## Security
 
-All values are bound via `PreparedStatement` `?` placeholders — never string-concatenated.
-`UpdateQueryBuilder` and `DeleteQueryBuilder` throw `IllegalStateException` if called
-without a `WHERE` clause, preventing accidental full-table updates or deletes.
+All values are bound via `PreparedStatement` `?` placeholders — never string-concatenated. `UpdateQueryBuilder` and `DeleteQueryBuilder` throw `IllegalStateException` if called without a `WHERE` clause, preventing accidental full-table updates or deletes.
 
 ## Tech Stack
 
