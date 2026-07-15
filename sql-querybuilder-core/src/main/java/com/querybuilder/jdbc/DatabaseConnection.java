@@ -3,15 +3,20 @@ package com.querybuilder.jdbc;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Properties;
 
 public class DatabaseConnection {
 
-    private static final String URL  = "jdbc:mysql://localhost:3306/querybuilder_db";
-    private static final String USER = "root";
-    private static final String PASS = "Arjun";
+    // Configurable via system properties, so consumers can point this at
+    // their own database without editing library source. Falls back to
+    // sane local-dev defaults if not set.
+    //   -Ddb.url=jdbc:mysql://localhost:3306/your_db
+    //   -Ddb.user=your_user
+    //   -Ddb.password=your_password
+    private static final String URL  = System.getProperty("db.url",      "jdbc:mysql://localhost:3306/querybuilder_db");
+    private static final String USER = System.getProperty("db.user",     "root");
+    private static final String PASS = System.getProperty("db.password", "");
 
-    private static DatabaseConnection instance;  // no volatile needed
+    private static DatabaseConnection instance;
     private Connection connection;
 
     private DatabaseConnection() {
@@ -25,7 +30,7 @@ public class DatabaseConnection {
 
     public static DatabaseConnection getInstance() {
         if (instance == null) {
-            instance = new DatabaseConnection();  // no double-checked locking needed
+            instance = new DatabaseConnection();
         }
         return instance;
     }
