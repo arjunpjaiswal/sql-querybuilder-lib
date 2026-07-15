@@ -4,62 +4,103 @@ A fluent SQL query builder implementing the **Builder Design Pattern**, full **J
 
 ## Project Structure
 
+Two Maven modules under a parent aggregator: `core` is the published library,
+`demo` is a runnable e-commerce example that consumes `core` the same way an
+external project would.
+
 ```
 sql-querybuilder/
-├── pom.xml                          ← Maven build (Java 17, MySQL connector, JUnit 5)
-├── schema.sql                       ← MySQL schema setup — run this first
-├── README.md
-├── src/main/java/com/querybuilder/
-│   ├── core/                        ← Builder layer
-│   │   ├── IQueryBuilder.java       ← SELECT builder interface
-│   │   ├── IMutationBuilder.java    ← INSERT/UPDATE/DELETE interface
-│   │   ├── SelectQueryBuilder.java  ← Concrete SELECT builder
-│   │   ├── InsertQueryBuilder.java  ← Concrete INSERT builder
-│   │   ├── UpdateQueryBuilder.java  ← Concrete UPDATE builder
-│   │   └── DeleteQueryBuilder.java  ← Concrete DELETE builder
-│   ├── jdbc/                        ← JDBC layer
-│   │   ├── DatabaseConnection.java  ← Singleton connection manager
-│   │   ├── QueryExecutor.java       ← SQL execution engine (PreparedStatement)
-│   │   └── TransactionManager.java  ← ACID transaction handling
-│   ├── model/                       ← Plain Java Objects (POJOs)
-│   │   ├── User.java
-│   │   ├── Product.java
-│   │   └── Order.java
-│   ├── dao/                         ← Data Access Object layer
-│   │   ├── UserDAO.java
-│   │   ├── ProductDAO.java
-│   │   └── OrderDAO.java
-│   └── Main.java                    ← Full demo entry point (18 sections)
-└── src/test/java/com/querybuilder/
-    ├── SelectQueryBuilderTest.java  ← 25 tests for SELECT builder
-    └── MutationBuilderTest.java     ← 7 tests for INSERT/UPDATE/DELETE builders
+├── pom.xml                              ← Parent aggregator (packaging=pom)
+├── sql-querybuilder-core/               ← THE LIBRARY — this is what you depend on
+│   ├── pom.xml
+│   └── src/
+│       ├── main/java/com/querybuilder/
+│       │   ├── core/                    ← Builder layer
+│       │   │   ├── IQueryBuilder.java       ← SELECT builder interface
+│       │   │   ├── IMutationBuilder.java    ← INSERT/UPDATE/DELETE interface
+│       │   │   ├── SelectQueryBuilder.java  ← Concrete SELECT builder
+│       │   │   ├── InsertQueryBuilder.java  ← Concrete INSERT builder
+│       │   │   ├── UpdateQueryBuilder.java  ← Concrete UPDATE builder
+│       │   │   └── DeleteQueryBuilder.java  ← Concrete DELETE builder
+│       │   └── jdbc/                    ← JDBC layer
+│       │       ├── DatabaseConnection.java  ← Singleton connection manager
+│       │       ├── QueryExecutor.java       ← SQL execution engine (PreparedStatement)
+│       │       └── TransactionManager.java  ← ACID transaction handling
+│       └── test/java/com/querybuilder/
+│           ├── SelectQueryBuilderTest.java  ← 25 tests for SELECT builder
+│           └── MutationBuilderTest.java     ← 7 tests for INSERT/UPDATE/DELETE builders
+└── sql-querybuilder-demo/               ← Usage example (not published)
+    ├── pom.xml                          ← depends on sql-querybuilder-core
+    ├── schema.sql                       ← MySQL schema setup — run this first
+    └── src/main/java/com/querybuilder/
+        ├── model/                       ← Plain Java Objects (POJOs)
+        │   ├── User.java
+        │   ├── Product.java
+        │   └── Order.java
+        ├── dao/                         ← Data Access Object layer
+        │   ├── UserDAO.java
+        │   ├── ProductDAO.java
+        │   └── OrderDAO.java
+        └── Main.java                    ← Full demo entry point (18 sections)
 ```
 
-## Quick Start
+## Installation
+
+Add `sql-querybuilder-core` to your own project via [JitPack](https://jitpack.io).
+
+**Maven**
+```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+<dependency>
+    <groupId>com.github.arjunpjaiswal</groupId>
+    <artifactId>sql-querybuilder-core</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+**Gradle**
+```gradle
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+dependencies {
+    implementation 'com.github.arjunpjaiswal:sql-querybuilder-core:1.0.0'
+}
+```
+
+The MySQL JDBC driver comes along transitively — no need to declare it separately.
+
+## Quick Start (running the demo locally)
 
 ### 1. Set up the database
 ```bash
-mysql -u root -p < schema.sql
+mysql -u root -p < sql-querybuilder-demo/schema.sql
 ```
 
-### 2. Build the project
+### 2. Build everything (core + demo)
 ```bash
-mvn package
+mvn clean install
 ```
 
 ### 3. Run unit tests (no database needed)
 ```bash
-mvn test
+mvn test -pl sql-querybuilder-core
 ```
 
 ### 4. Run the demo
 ```bash
-java -jar target/sql-querybuilder-1.0.0-jar-with-dependencies.jar
+java -jar sql-querybuilder-demo/target/sql-querybuilder-demo-1.0.0-jar-with-dependencies.jar
 ```
 
 If your MySQL password differs from the default in `DatabaseConnection.java`, override it:
 ```bash
-java -Ddb.password=yourpassword -jar target/sql-querybuilder-1.0.0-jar-with-dependencies.jar
+java -Ddb.password=yourpassword -jar sql-querybuilder-demo/target/sql-querybuilder-demo-1.0.0-jar-with-dependencies.jar
 ```
 
 > **Note:** The demo clears all three tables and resets AUTO_INCREMENT at startup so it

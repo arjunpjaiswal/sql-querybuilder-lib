@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.querybuilder</groupId>
+        <artifactId>sql-querybuilder-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>sql-querybuilder-demo</artifactId>
+    <packaging>jar</packaging>
+    <name>SQL QueryBuilder - Demo</name>
+    <description>
+        Runnable e-commerce example (User/Product/Order + DAOs) showing how an
+        external consumer would use sql-querybuilder-core. Not published —
+        this is a usage sample, not part of the library.
+    </description>
+
+    <dependencies>
+        <!-- Depends on core the same way an external consumer would -->
+        <dependency>
+            <groupId>com.querybuilder</groupId>
+            <artifactId>sql-querybuilder-core</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.6.0</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.querybuilder.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals><goal>single</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
