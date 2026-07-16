@@ -1,5 +1,7 @@
 # SQL QueryBuilder
 
+[![](https://jitpack.io/v/arjunpjaiswal/sql-querybuilder-lib.svg)](https://jitpack.io/#arjunpjaiswal/sql-querybuilder-lib)
+
 A fluent SQL query builder implementing the **Builder Design Pattern**, full **JDBC** integration, **CRUD** operations, **Joins**, **Aggregations**, **Transactions**, and **SOLID principles** throughout.
 
 ## Project Structure
@@ -42,6 +44,8 @@ sql-querybuilder/
         └── Main.java                    ← Full demo entry point (18 sections)
 ```
 
+> This is the packaged, JitPack-installable version of the SQL QueryBuilder project — built to be dropped into any Java project as a real dependency, not just cloned and read.
+
 ## Installation
 
 Add `sql-querybuilder-core` to your own project via [JitPack](https://jitpack.io).
@@ -56,7 +60,7 @@ Add `sql-querybuilder-core` to your own project via [JitPack](https://jitpack.io
 </repositories>
 
 <dependency>
-    <groupId>com.github.arjunpjaiswal</groupId>
+    <groupId>com.github.arjunpjaiswal.sql-querybuilder-lib</groupId>
     <artifactId>sql-querybuilder-core</artifactId>
     <version>1.0.1</version>
 </dependency>
@@ -68,7 +72,7 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 dependencies {
-    implementation 'com.github.arjunpjaiswal:sql-querybuilder-core:1.0.1'
+    implementation 'com.github.arjunpjaiswal.sql-querybuilder-lib:sql-querybuilder-core:1.0.1'
 }
 ```
 
