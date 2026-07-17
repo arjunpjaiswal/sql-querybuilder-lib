@@ -206,6 +206,73 @@ userDAO.delete(1);
 
 ---
 
+## Using with Spring Boot
+
+This library is designed to **complement JPA, not replace it**. In a typical Spring Boot project:
+
+- **JPA / Spring Data** handles simple CRUD and relationship mapping (`findById`, `save`, `@OneToMany`) — no reason to hand-write SQL for that.
+- **This builder + `JdbcTemplate`** handles the cases JPA gets awkward at: dynamic queries with optional filters, multi-table aggregations, `GROUP BY` / `HAVING` reports, and pagination with variable `WHERE` clauses.
+
+Both share the same `DataSource` and connection pool — there's no conflict running them side by side in the same app. The builder only produces a SQL string; `JdbcTemplate` executes it, so nothing here depends on this library's own `QueryExecutor` or `DatabaseConnection` singleton.
+
+```java
+// JPA — for simple queries
+public interface UserRepository extends JpaRepository<User, Integer> {
+    List<User> findByCity(String city);
+    Optional<User> findByEmail(String email);
+}
+
+// This builder + JdbcTemplate — for complex queries
+@Service
+public class UserReportService {
+
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
+    public List<Map<String, Object>> topSpenders(double min) {
+        String sql = new SelectQueryBuilder()
+                .select("u.name", "SUM(o.total_price) AS total")
+                .from("users u")
+                .innerJoin("orders o", "o.user_id = u.id")
+                .groupBy("u.id", "u.name")
+                .having("SUM(o.total_price) > ?")
+                .orderBy("total", "DESC")
+                .build();
+
+        return jdbcTemplate.queryForList(sql, min);
+    }
+}
+```
+
+```java
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+
+    @Autowired
+    UserRepository userRepository;    // JPA — simple lookups
+
+    @Autowired
+    UserReportService reportService;  // builder + JdbcTemplate — complex reports
+
+    @GetMapping("/{id}")
+    public ResponseEntity<User> findById(@PathVariable int id) {
+        return userRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/top-spenders")
+    public List<Map<String, Object>> topSpenders(@RequestParam double minValue) {
+        return reportService.topSpenders(minValue);
+    }
+}
+```
+
+No extra configuration is needed beyond your normal `spring-boot-starter-data-jpa` and `spring-boot-starter-jdbc` dependencies — Spring Boot auto-configures both `JdbcTemplate` and the JPA `EntityManager` off the same `DataSource`.
+
+---
+
 ## Running the bundled demo locally
 
 The `demo` module is a full e-commerce example showing every feature end-to-end against a real MySQL database.
