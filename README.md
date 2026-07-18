@@ -1,6 +1,6 @@
 # SQL QueryBuilder
 
-[![](https://jitpack.io/v/arjunpjaiswal/sql-querybuilder-lib/sql-querybuilder-core.svg)](https://jitpack.io/#arjunpjaiswal/sql-querybuilder-lib/sql-querybuilder-core)
+[![](https://jitpack.io/v/arjunpjaiswal/sql-querybuilder-lib.svg)](https://jitpack.io/#arjunpjaiswal/sql-querybuilder-lib/sql-querybuilder-core)
 
 A fluent SQL query builder implementing the **Builder Design Pattern**, full **JDBC** integration, **CRUD** operations, **Joins**, **Aggregations**, **Transactions**, and **SOLID principles** throughout.
 
